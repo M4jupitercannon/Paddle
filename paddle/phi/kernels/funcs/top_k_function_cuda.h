@@ -401,7 +401,9 @@ __global__ void KeMatrixTopK(T* output,
   const int bid = blockIdx.x;
   for (int64_t i = bid; i < num; i += grid_dim) {
     int top_num = k;
-    __shared__ Pair<T> shared_max[BlockSize / WARP_SIZE];
+    // HIP rejects zero-length shared arrays for BlockSize < WARP_SIZE.
+    __shared__ Pair<T>
+        shared_max[(BlockSize / WARP_SIZE) > 0 ? (BlockSize / WARP_SIZE) : 1];
     T* out = output + i * output_stride;
     int64_t* inds = indices + i * k;
     Pair<T> topk[MaxLength];
